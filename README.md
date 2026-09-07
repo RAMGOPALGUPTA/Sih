@@ -1,39 +1,63 @@
 # SIH26231 — Digital Companion for Field Drug Testing
 
-Android-first field companion for colorimetric field-test workflows.
+An Android-first digital companion for colorimetric field-test workflows.
 
-## Prototype
-
-The system captures a test strip together with a reference color card, performs image quality and color calibration, runs on-device classification, creates a tamper-evident evidence record, supports offline-first storage, synchronizes with a REST backend, and provides an operational dashboard.
-
-## Architecture
+## System
 
 ```text
-Flutter Mobile
-  Camera → Quality Check → Reference Card Calibration
-  → Test ROI → On-device TFLite → Positive / Negative / Inconclusive
-  → GPS + Timestamp + Operator ID → SHA-256 → Offline Queue
-                         ↓ sync
-                    FastAPI REST API
-                         ↓
-                     PostgreSQL
-                         ↓
-                 React Dashboard
+FIELD OFFICER
+    │
+    ▼
+Flutter Mobile App
+    │  Camera
+    │  Image Quality
+    │  Reference-Card Calibration
+    │  Test ROI Extraction
+    │  TensorFlow Lite Inference
+    │  GPS + Timestamp + Operator ID
+    │  SHA-256 Evidence Integrity
+    │  Offline-First Case Queue
+    │
+    │ sync
+    ▼
+FastAPI REST API
+    │
+    ▼
+PostgreSQL
+    │
+    ▼
+React Operations Dashboard
 ```
 
-## Repository Layout
+## Monorepo
 
-- `mobile/` — Flutter Android-first application
-- `ml/` — dataset preparation, training, evaluation and TFLite export
-- `backend/` — FastAPI service, database models and evidence verification
-- `dashboard/` — React operational dashboard
-- `docs/` — architecture, API, model and demonstration documentation
-- `infra/` — local Docker and deployment configuration
+```text
+sih/
+├── mobile/                 # Flutter Android-first application
+├── ml/                     # preprocessing, training, evaluation, TFLite export
+├── backend/                # FastAPI API and evidence verification
+├── dashboard/              # React operational dashboard
+├── docs/                   # architecture, API, ML and demo documentation
+├── infra/                  # Docker/deployment configuration
+└── .github/workflows/      # CI/CD
+```
 
-## Safety and scope
+## ML
 
-The ML component is an interpretation aid for a presumptive colorimetric field test. It is not represented as definitive laboratory confirmation or definitive drug identification.
+Prototype classes: `positive`, `negative`, `inconclusive`.
 
-## Status
+The model pipeline uses the reference color card for calibration before classification. Low-quality or low-confidence observations can remain inconclusive. The model is an interpretation aid for a presumptive field test, not definitive laboratory confirmation or definitive drug identification.
 
-Initial repository scaffold. Implementation will proceed as vertical slices, starting with the capture/calibration/ML path.
+## Evidence
+
+Each case will bind the case ID, operator ID, timestamp, GPS coordinates, image SHA-256, canonical payload SHA-256, model version and application version. Verification recomputes hashes and reports whether the evidence matches the recorded integrity values.
+
+## Development order
+
+1. Mobile capture and calibration
+2. ML preprocessing/training/evaluation
+3. On-device inference
+4. Evidence hashing and offline storage
+5. FastAPI + PostgreSQL synchronization
+6. React dashboard and integrity verification
+7. Integration tests and deployment
