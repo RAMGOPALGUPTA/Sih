@@ -1,0 +1,39 @@
+# Flutter
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.idea/
+mobile/android/.gradle/
+mobile/android/local.properties
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# ML data and artifacts
+ml/dataset/raw/*
+ml/dataset/processed/*
+ml/dataset/manifests/*.private.*
+*.h5
+*.keras
+
+# Node
+node_modules/
+dashboard/dist/
+dashboard/.env*
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+secrets/
