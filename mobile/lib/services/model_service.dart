@@ -1,0 +1,4 @@
+import 'dart:typed_data';
+import 'package:tflite_flutter/tflite_flutter.dart';
+class InferenceResult{final String label;final double confidence;final String modelVersion;const InferenceResult(this.label,this.confidence,this.modelVersion);}
+class ModelService{Interpreter? i;static const labels=['negative','positive','inconclusive'];Future<void>load()async{i=await Interpreter.fromAsset('assets/model.tflite');}InferenceResult predict(Float32List input,{String version='1.0.0'}){if(i==null)throw StateError('model not loaded');final o=List.generate(1,(_)=>List.filled(3,0.0));i!.run(input.reshape([1,224,224,3]),o);final s=List<double>.from(o[0]);var n=0;for(var j=1;j<3;j++){if(s[j]>s[n])n=j;}return InferenceResult(labels[n],s[n],version);}}
