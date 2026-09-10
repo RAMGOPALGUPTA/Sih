@@ -1,63 +1,32 @@
-# SIH26231 — Digital Companion for Field Drug Testing
+# SIH — Digital Companion for Field Drug Testing
 
-An Android-first digital companion for colorimetric field-test workflows.
+Complete monorepo for an offline-first field-test companion: Flutter mobile app, image/calibration pipeline, TensorFlow training/export, FastAPI API, PostgreSQL, React dashboard, Docker and CI.
 
-## System
+## Status
+This repository is rebuilt from a clean tree. The ML pipeline trains on operator-supplied labelled images; no fabricated model or accuracy is committed.
 
-```text
-FIELD OFFICER
-    │
-    ▼
-Flutter Mobile App
-    │  Camera
-    │  Image Quality
-    │  Reference-Card Calibration
-    │  Test ROI Extraction
-    │  TensorFlow Lite Inference
-    │  GPS + Timestamp + Operator ID
-    │  SHA-256 Evidence Integrity
-    │  Offline-First Case Queue
-    │
-    │ sync
-    ▼
-FastAPI REST API
-    │
-    ▼
-PostgreSQL
-    │
-    ▼
-React Operations Dashboard
+## Quick start
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+API: http://localhost:8000/docs
+Dashboard: http://localhost:5173
+
+### Train the model
+```bash
+cd ml
+python -m pip install -r requirements.txt
+python train.py --data dataset/raw --output artifacts
+python export_tflite.py --model artifacts/model.keras --output ../mobile/assets/model.tflite
+```
+Put images in `ml/dataset/raw/{positive,negative,inconclusive}` before training.
+
+### Mobile
+Install Flutter, then:
+```bash
+cd mobile
+flutter pub get
+flutter run
 ```
 
-## Monorepo
-
-```text
-sih/
-├── mobile/                 # Flutter Android-first application
-├── ml/                     # preprocessing, training, evaluation, TFLite export
-├── backend/                # FastAPI API and evidence verification
-├── dashboard/              # React operational dashboard
-├── docs/                   # architecture, API, ML and demo documentation
-├── infra/                  # Docker/deployment configuration
-└── .github/workflows/      # CI/CD
-```
-
-## ML
-
-Prototype classes: `positive`, `negative`, `inconclusive`.
-
-The model pipeline uses the reference color card for calibration before classification. Low-quality or low-confidence observations can remain inconclusive. The model is an interpretation aid for a presumptive field test, not definitive laboratory confirmation or definitive drug identification.
-
-## Evidence
-
-Each case will bind the case ID, operator ID, timestamp, GPS coordinates, image SHA-256, canonical payload SHA-256, model version and application version. Verification recomputes hashes and reports whether the evidence matches the recorded integrity values.
-
-## Development order
-
-1. Mobile capture and calibration
-2. ML preprocessing/training/evaluation
-3. On-device inference
-4. Evidence hashing and offline storage
-5. FastAPI + PostgreSQL synchronization
-6. React dashboard and integrity verification
-7. Integration tests and deployment
+The system is an interpretation aid for a presumptive colorimetric field test. It is not definitive laboratory confirmation or definitive drug identification.
