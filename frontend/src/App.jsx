@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react'
-import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Dashboard } from './pages/Dashboard.jsx'
 import { NewTest } from './pages/NewTest.jsx'
 import { Cases } from './pages/Cases.jsx'
 import { CaseDetail } from './pages/CaseDetail.jsx'
 import { Evidence } from './pages/Evidence.jsx'
 import { Analytics } from './pages/Analytics.jsx'
+import { Login } from './pages/Login.jsx'
+import { getSession, logout } from './services/auth.js'
 
 function Glyph({ type, size = 18 }) {
   const paths = {
@@ -18,6 +20,12 @@ function Glyph({ type, size = 18 }) {
     gear: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M3 12h2m14 0h2M12 3v2m0 14v2M5.6 5.6L7 7m10 10 1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4',
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[type] || paths.grid} /></svg>
+}
+
+function ProtectedRoute({ children }) {
+  const location = useLocation()
+  if (!getSession()) return <Navigate to="/login" replace state={{ from: location }} />
+  return children
 }
 
 function Shell({ children }) {
@@ -60,7 +68,7 @@ function Shell({ children }) {
             <div className="connection-copy">Inference gateway armed</div>
           </div>
         </div>
-        <button className="operator-button" onClick={() => navigate('/')}>
+        <button className="operator-button" onClick={() => { logout(); navigate('/login', { replace: true }) }} title="Sign out">
           <div className="operator-avatar">RG</div>
           <div className="operator-meta"><strong>Ram Gupta</strong><span>Field Officer · A-17</span></div>
           <Glyph type="gear" size={17} />
@@ -86,12 +94,15 @@ function Shell({ children }) {
 }
 
 export default function App() {
-  return <Shell><Routes>
-    <Route path="/" element={<Dashboard />} />
-    <Route path="/new-test" element={<NewTest />} />
-    <Route path="/cases" element={<Cases />} />
-    <Route path="/cases/:caseId" element={<CaseDetail />} />
-    <Route path="/evidence" element={<Evidence />} />
-    <Route path="/analytics" element={<Analytics />} />
-  </Routes></Shell>
+  return <Routes>
+    <Route path="/login" element={<Login />} />
+    <Route path="*" element={<ProtectedRoute><Shell><Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/new-test" element={<NewTest />} />
+      <Route path="/cases" element={<Cases />} />
+      <Route path="/cases/:caseId" element={<CaseDetail />} />
+      <Route path="/evidence" element={<Evidence />} />
+      <Route path="/analytics" element={<Analytics />} />
+    </Routes></Shell></ProtectedRoute>} />
+  </Routes>
 }
